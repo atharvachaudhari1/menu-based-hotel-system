@@ -1,7 +1,7 @@
 import { Phone, MessageCircle } from "lucide-react";
 
 const WHATSAPP_NUMBER = "15556658085";
-const WHATSAPP_MESSAGE = "RID-dff94196-5ae5-4c86-89c0-8797cbd9b1b1";
+const WHATSAPP_MESSAGE = "menu RID-dff94196-5ae5-4c86-89c0-8797cbd9b1b1";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 const TEL_URL = `tel:+${WHATSAPP_NUMBER}`;
 
