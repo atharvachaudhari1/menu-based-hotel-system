@@ -88,13 +88,12 @@ async function deleteScoped(userId: string, table: "customers" | "feedback", id:
     let customerQ = supabaseAdmin
       .from("customers")
       .select("id, restaurant_id")
-      .eq("id", id)
-      .maybeSingle();
+      .eq("id", id);
     if (a.role !== "super_admin") {
       if (!a.restaurantId) throw new Error("Forbidden");
       customerQ = customerQ.eq("restaurant_id", a.restaurantId);
     }
-    const { data: customer, error: customerErr } = await customerQ;
+    const { data: customer, error: customerErr } = await customerQ.maybeSingle();
     if (customerErr) throw new Error(customerErr.message);
     if (!customer) return { ok: true };
 
