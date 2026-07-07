@@ -21,6 +21,12 @@ export const Route = createFileRoute("/admin/hotels/")({
 
 type Hotel = { id: string; name: string; is_active: boolean; created_at: string };
 
+const WA_NUMBER_KEY = "wa_business_number";
+
+function normalizeNumber(n: string) {
+  return n.replace(/[^\d]/g, "");
+}
+
 function HotelsPage() {
   const qc = useQueryClient();
   const list = useServerFn(listHotels);
@@ -32,6 +38,15 @@ function HotelsPage() {
     queryKey: ["hotels"],
     queryFn: () => list() as Promise<Hotel[]>,
   });
+
+  const [waNumber, setWaNumber] = useState<string>(() =>
+    typeof window !== "undefined" ? localStorage.getItem(WA_NUMBER_KEY) ?? "" : ""
+  );
+  function saveWa(v: string) {
+    const clean = normalizeNumber(v);
+    setWaNumber(clean);
+    localStorage.setItem(WA_NUMBER_KEY, clean);
+  }
 
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState("");
