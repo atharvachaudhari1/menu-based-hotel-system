@@ -145,6 +145,7 @@ function HotelsPage() {
               <HotelRow
                 key={h.id}
                 hotel={h}
+                waNumber={waNumber}
                 onToggle={(v) => updateM.mutate({ id: h.id, is_active: v })}
                 onRename={(n) => updateM.mutate({ id: h.id, name: n })}
                 onDelete={() => {
