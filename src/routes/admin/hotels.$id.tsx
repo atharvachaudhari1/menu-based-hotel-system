@@ -38,6 +38,8 @@ function HotelDetailPage() {
   const qc = useQueryClient();
   const getH = useServerFn(getHotel);
   const list = useServerFn(listMenu);
+  const updH = useServerFn(updateHotel);
+  const delH = useServerFn(deleteHotel);
 
   const { data: hotel } = useQuery({
     queryKey: ["hotel", id],
