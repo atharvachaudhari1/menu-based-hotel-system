@@ -19,6 +19,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminHotelsRouteImport } from './routes/admin/hotels'
+import { Route as AdminFeedbackRouteImport } from './routes/admin/feedback'
+import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
+import { Route as AdminHotelsIdRouteImport } from './routes/admin/hotels.$id'
 
 const RoomsRoute = RoomsRouteImport.update({
   id: '/rooms',
@@ -70,6 +73,21 @@ const AdminHotelsRoute = AdminHotelsRouteImport.update({
   path: '/hotels',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminHotelsIdRoute = AdminHotelsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminHotelsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,9 +97,12 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
-  '/admin/hotels': typeof AdminHotelsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/hotels': typeof AdminHotelsRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/hotels/$id': typeof AdminHotelsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,9 +111,12 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
-  '/admin/hotels': typeof AdminHotelsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/hotels': typeof AdminHotelsRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/hotels/$id': typeof AdminHotelsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,9 +127,12 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
-  '/admin/hotels': typeof AdminHotelsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/hotels': typeof AdminHotelsRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/hotels/$id': typeof AdminHotelsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,9 +144,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/rooms'
+    | '/admin/customers'
+    | '/admin/feedback'
     | '/admin/hotels'
     | '/admin/login'
     | '/admin/'
+    | '/admin/hotels/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,9 +158,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/rooms'
+    | '/admin/customers'
+    | '/admin/feedback'
     | '/admin/hotels'
     | '/admin/login'
     | '/admin'
+    | '/admin/hotels/$id'
   id:
     | '__root__'
     | '/'
@@ -140,9 +173,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/rooms'
+    | '/admin/customers'
+    | '/admin/feedback'
     | '/admin/hotels'
     | '/admin/login'
     | '/admin/'
+    | '/admin/hotels/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -227,17 +263,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHotelsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/feedback': {
+      id: '/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/hotels/$id': {
+      id: '/admin/hotels/$id'
+      path: '/$id'
+      fullPath: '/admin/hotels/$id'
+      preLoaderRoute: typeof AdminHotelsIdRouteImport
+      parentRoute: typeof AdminHotelsRoute
+    }
   }
 }
 
+interface AdminHotelsRouteChildren {
+  AdminHotelsIdRoute: typeof AdminHotelsIdRoute
+}
+
+const AdminHotelsRouteChildren: AdminHotelsRouteChildren = {
+  AdminHotelsIdRoute: AdminHotelsIdRoute,
+}
+
+const AdminHotelsRouteWithChildren = AdminHotelsRoute._addFileChildren(
+  AdminHotelsRouteChildren,
+)
+
 interface AdminRouteRouteChildren {
-  AdminHotelsRoute: typeof AdminHotelsRoute
+  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminFeedbackRoute: typeof AdminFeedbackRoute
+  AdminHotelsRoute: typeof AdminHotelsRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
-  AdminHotelsRoute: AdminHotelsRoute,
+  AdminCustomersRoute: AdminCustomersRoute,
+  AdminFeedbackRoute: AdminFeedbackRoute,
+  AdminHotelsRoute: AdminHotelsRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
