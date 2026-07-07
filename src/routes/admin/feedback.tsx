@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star } from "lucide-react";
-import { listFeedback } from "@/lib/insights.functions";
+import { Star, Trash2 } from "lucide-react";
+import { listFeedback, deleteFeedback } from "@/lib/insights.functions";
 import { listHotels } from "@/lib/hotels.functions";
 
 export const Route = createFileRoute("/admin/feedback")({
