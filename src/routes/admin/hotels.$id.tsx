@@ -290,3 +290,157 @@ function ItemDialog({
     </Dialog>
   );
 }
+
+const SAMPLE_CSV =
+  "category,name,description,price,is_veg,is_available\n" +
+  "Starters,Paneer Tikka,Grilled cottage cheese,220,true,true\n" +
+  "Starters,Chicken 65,Spicy fried chicken,260,false,true\n" +
+  "Main Course,Dal Makhani,Slow-cooked black lentils,240,true,true\n";
+
+function CsvImporter({
+  restaurantId,
+  onDone,
+}: {
+  restaurantId: string;
+  onDone: () => void;
+}) {
+  const bulk = useServerFn(bulkImportMenu);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<BulkRow[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  function handleFile(file: File) {
+    Papa.parse<Record<string, string>>(file, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (h) => h.trim().toLowerCase(),
+      complete: (res) => {
+        const parsed: BulkRow[] = [];
+        const errs: string[] = [];
+        res.data.forEach((r, i) => {
+          const category = (r.category || "").trim();
+          const name = (r.name || "").trim();
+          const priceStr = (r.price || "").trim();
+          const price = Number(priceStr);
+          if (!category || !name || !priceStr || Number.isNaN(price)) {
+            errs.push(`Row ${i + 2}: needs category, name and numeric price`);
+            return;
+          }
+          const veg = (r.is_veg || "").toLowerCase();
+          const avail = (r.is_available || "").toLowerCase();
+          parsed.push({
+            category,
+            name,
+            description: (r.description || "").trim() || null,
+            price,
+            is_veg: veg === "" ? true : veg === "true" || veg === "yes" || veg === "1" || veg === "veg",
+            is_available: avail === "" ? true : avail === "true" || avail === "yes" || avail === "1",
+          });
+        });
+        setRows(parsed);
+        setErrors(errs);
+        setOpen(true);
+      },
+      error: (err) => toast.error(err.message),
+    });
+  }
+
+  async function doImport() {
+    setBusy(true);
+    try {
+      const res = await bulk({ data: { restaurantId, rows } });
+      toast.success(`Imported ${res.inserted} items (${res.categoriesCreated} new categories)`);
+      setOpen(false);
+      setRows([]);
+      setErrors([]);
+      onDone();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function downloadSample() {
+    const blob = new Blob([SAMPLE_CSV], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "menu-sample.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".csv,text/csv"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+          e.target.value = "";
+        }}
+      />
+      <Button variant="outline" onClick={() => inputRef.current?.click()}>
+        <Upload className="h-4 w-4 mr-2" /> Upload CSV
+      </Button>
+      <Button variant="ghost" size="sm" onClick={downloadSample}>
+        <Download className="h-4 w-4 mr-1" /> Sample
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import menu — preview</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-[60vh] overflow-auto">
+            {errors.length > 0 && (
+              <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-xs text-destructive space-y-1">
+                {errors.map((e, i) => <div key={i}>{e}</div>)}
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground">
+              {rows.length} items ready to import. New categories will be auto-created.
+            </div>
+            <div className="rounded-md border border-border overflow-hidden">
+              <table className="w-full text-xs">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left p-2">Category</th>
+                    <th className="text-left p-2">Name</th>
+                    <th className="text-left p-2">Price</th>
+                    <th className="text-left p-2">Veg</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.slice(0, 100).map((r, i) => (
+                    <tr key={i} className="border-t border-border">
+                      <td className="p-2">{r.category}</td>
+                      <td className="p-2">{r.name}</td>
+                      <td className="p-2">₹{r.price}</td>
+                      <td className="p-2">{r.is_veg ? "yes" : "no"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Expected columns: <code>category, name, description, price, is_veg, is_available</code>
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button disabled={rows.length === 0 || busy} onClick={doImport}>
+              {busy ? "Importing…" : `Import ${rows.length} items`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
