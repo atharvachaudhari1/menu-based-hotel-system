@@ -106,17 +106,20 @@ function HotelDetailPage() {
         <p className="text-muted-foreground text-sm mt-1 font-mono">{id}</p>
       </div>
 
-      <div className="flex gap-2 items-end max-w-md">
-        <div className="flex-1 space-y-1">
-          <Label>New category</Label>
-          <Input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="e.g. Starters" />
+      <div className="flex flex-wrap gap-3 items-end">
+        <div className="flex gap-2 items-end flex-1 min-w-[280px] max-w-md">
+          <div className="flex-1 space-y-1">
+            <Label>New category</Label>
+            <Input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="e.g. Starters" />
+          </div>
+          <Button
+            disabled={!newCat.trim() || catCreate.isPending}
+            onClick={() => { catCreate.mutate(newCat.trim()); setNewCat(""); }}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add
+          </Button>
         </div>
-        <Button
-          disabled={!newCat.trim() || catCreate.isPending}
-          onClick={() => { catCreate.mutate(newCat.trim()); setNewCat(""); }}
-        >
-          <Plus className="h-4 w-4 mr-1" /> Add
-        </Button>
+        <CsvImporter restaurantId={id} onDone={invalidate} />
       </div>
 
       {isLoading && <div className="text-muted-foreground">Loading menu…</div>}
