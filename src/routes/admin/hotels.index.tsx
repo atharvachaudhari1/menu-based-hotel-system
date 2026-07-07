@@ -162,9 +162,10 @@ function HotelsPage() {
 }
 
 function HotelRow({
-  hotel, onToggle, onRename, onDelete,
+  hotel, waNumber, onToggle, onRename, onDelete,
 }: {
   hotel: Hotel;
+  waNumber: string;
   onToggle: (v: boolean) => void;
   onRename: (n: string) => void;
   onDelete: () => void;
@@ -172,8 +173,11 @@ function HotelRow({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(hotel.name);
 
-  const waText = encodeURIComponent(`Hi ${hotel.id}`);
-  const waLink = `https://wa.me/?text=${waText}`;
+  const message = `menu ${hotel.id}`;
+  const waText = encodeURIComponent(message);
+  const waLink = waNumber
+    ? `https://wa.me/${waNumber}?text=${waText}`
+    : `https://wa.me/?text=${waText}`;
 
   function copy(text: string, label: string) {
     navigator.clipboard.writeText(text).then(() => toast.success(`${label} copied`));
