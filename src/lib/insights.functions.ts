@@ -83,6 +83,16 @@ export const meAdmin = createServerFn({ method: "GET" })
 async function deleteScoped(userId: string, table: "customers" | "feedback", id: string) {
   const a = await admin(userId);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  // Clear dependent scan_sessions first (FK: scan_sessions.customer_id -> customers.id)
+  if (table === "customers") {
+    const { error: sErr } = await supabaseAdmin
+      .from("scan_sessions")
+      .delete()
+      .eq("customer_id", id);
+    if (sErr) throw new Error(sErr.message);
+  }
+
   let q = supabaseAdmin.from(table).delete().eq("id", id);
   if (a.role !== "super_admin") {
     if (!a.restaurantId) throw new Error("Forbidden");
