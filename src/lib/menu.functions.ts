@@ -160,3 +160,67 @@ export const deleteItem = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type BulkRow = {
+  category: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  is_veg?: boolean;
+  is_available?: boolean;
+};
+
+export const bulkImportMenu = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { restaurantId: string; rows: BulkRow[] }) => d)
+  .handler(async ({ context, data }) => {
+    await assertHotelAccess(context.userId, data.restaurantId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Fetch existing categories for this hotel
+    const { data: existing, error: catErr } = await supabaseAdmin
+      .from("menu_categories")
+      .select("id, name, display_order")
+      .eq("restaurant_id", data.restaurantId);
+    if (catErr) throw new Error(catErr.message);
+
+    const byName = new Map<string, string>();
+    for (const c of existing ?? []) byName.set(c.name.trim().toLowerCase(), c.id);
+    let nextOrder = (existing ?? []).reduce((m, c) => Math.max(m, c.display_order ?? 0), 0) + 1;
+
+    // Create any missing categories
+    const missing: string[] = [];
+    for (const r of data.rows) {
+      const key = r.category.trim().toLowerCase();
+      if (!byName.has(key) && !missing.includes(key)) missing.push(key);
+    }
+    for (const key of missing) {
+      const original = data.rows.find((r) => r.category.trim().toLowerCase() === key)!.category.trim();
+      const { data: created, error } = await supabaseAdmin
+        .from("menu_categories")
+        .insert({ restaurant_id: data.restaurantId, name: original, display_order: nextOrder++ })
+        .select("id")
+        .single();
+      if (error) throw new Error(`Category "${original}": ${error.message}`);
+      byName.set(key, created.id);
+    }
+
+    // Insert items
+    const inserts = data.rows.map((r) => ({
+      restaurant_id: data.restaurantId,
+      category_id: byName.get(r.category.trim().toLowerCase())!,
+      name: r.name.trim(),
+      description: r.description ?? null,
+      price: Number(r.price),
+      is_veg: r.is_veg ?? true,
+      is_available: r.is_available ?? true,
+    }));
+
+    if (inserts.length === 0) return { inserted: 0, categoriesCreated: missing.length };
+
+    const { error: itemErr } = await supabaseAdmin.from("menu_items").insert(inserts);
+    if (itemErr) throw new Error(itemErr.message);
+
+    return { inserted: inserts.length, categoriesCreated: missing.length };
+  });
+
