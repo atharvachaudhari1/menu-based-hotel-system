@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
+import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,11 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { ChevronLeft, Plus, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, Plus, Pencil, Trash2, Upload, Download } from "lucide-react";
 import { getHotel } from "@/lib/hotels.functions";
 import {
   listMenu, createCategory, updateCategory, deleteCategory,
-  createItem, updateItem, deleteItem,
+  createItem, updateItem, deleteItem, bulkImportMenu, type BulkRow,
 } from "@/lib/menu.functions";
 
 export const Route = createFileRoute("/admin/hotels/$id")({
