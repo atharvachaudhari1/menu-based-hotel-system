@@ -18,6 +18,10 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminFeedbackRouteImport } from './routes/admin/feedback'
+import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
+import { Route as AdminHotelsIndexRouteImport } from './routes/admin/hotels.index'
+import { Route as AdminHotelsIdRouteImport } from './routes/admin/hotels.$id'
 
 const RoomsRoute = RoomsRouteImport.update({
   id: '/rooms',
@@ -64,6 +68,26 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminHotelsIndexRoute = AdminHotelsIndexRouteImport.update({
+  id: '/hotels/',
+  path: '/hotels/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminHotelsIdRoute = AdminHotelsIdRouteImport.update({
+  id: '/hotels/$id',
+  path: '/hotels/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,8 +97,12 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/hotels/$id': typeof AdminHotelsIdRoute
+  '/admin/hotels/': typeof AdminHotelsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,8 +111,12 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/hotels/$id': typeof AdminHotelsIdRoute
+  '/admin/hotels': typeof AdminHotelsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,8 +127,12 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/hotels/$id': typeof AdminHotelsIdRoute
+  '/admin/hotels/': typeof AdminHotelsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,8 +144,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/rooms'
+    | '/admin/customers'
+    | '/admin/feedback'
     | '/admin/login'
     | '/admin/'
+    | '/admin/hotels/$id'
+    | '/admin/hotels/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -118,8 +158,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/rooms'
+    | '/admin/customers'
+    | '/admin/feedback'
     | '/admin/login'
     | '/admin'
+    | '/admin/hotels/$id'
+    | '/admin/hotels'
   id:
     | '__root__'
     | '/'
@@ -129,8 +173,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/rooms'
+    | '/admin/customers'
+    | '/admin/feedback'
     | '/admin/login'
     | '/admin/'
+    | '/admin/hotels/$id'
+    | '/admin/hotels/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,17 +256,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/feedback': {
+      id: '/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/hotels/': {
+      id: '/admin/hotels/'
+      path: '/hotels'
+      fullPath: '/admin/hotels/'
+      preLoaderRoute: typeof AdminHotelsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/hotels/$id': {
+      id: '/admin/hotels/$id'
+      path: '/hotels/$id'
+      fullPath: '/admin/hotels/$id'
+      preLoaderRoute: typeof AdminHotelsIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
 interface AdminRouteRouteChildren {
+  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminHotelsIdRoute: typeof AdminHotelsIdRoute
+  AdminHotelsIndexRoute: typeof AdminHotelsIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminCustomersRoute: AdminCustomersRoute,
+  AdminFeedbackRoute: AdminFeedbackRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminHotelsIdRoute: AdminHotelsIdRoute,
+  AdminHotelsIndexRoute: AdminHotelsIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
@@ -237,3 +321,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
