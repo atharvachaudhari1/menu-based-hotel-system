@@ -79,3 +79,27 @@ export const meAdmin = createServerFn({ method: "GET" })
     const a = await admin(context.userId);
     return a;
   });
+
+async function deleteScoped(userId: string, table: "customers" | "feedback", id: string) {
+  const a = await admin(userId);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  let q = supabaseAdmin.from(table).delete().eq("id", id);
+  if (a.role !== "super_admin") {
+    if (!a.restaurantId) throw new Error("Forbidden");
+    q = q.eq("restaurant_id", a.restaurantId);
+  }
+  const { error } = await q;
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+export const deleteCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(({ context, data }) => deleteScoped(context.userId, "customers", data.id));
+
+export const deleteFeedback = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(({ context, data }) => deleteScoped(context.userId, "feedback", data.id));
+
