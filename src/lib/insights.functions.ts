@@ -84,13 +84,40 @@ async function deleteScoped(userId: string, table: "customers" | "feedback", id:
   const a = await admin(userId);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  // Clear dependent scan_sessions first (FK: scan_sessions.customer_id -> customers.id)
   if (table === "customers") {
-    const { error: sErr } = await supabaseAdmin
+    let customerQ = supabaseAdmin
+      .from("customers")
+      .select("id, restaurant_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (a.role !== "super_admin") {
+      if (!a.restaurantId) throw new Error("Forbidden");
+      customerQ = customerQ.eq("restaurant_id", a.restaurantId);
+    }
+    const { data: customer, error: customerErr } = await customerQ;
+    if (customerErr) throw new Error(customerErr.message);
+    if (!customer) return { ok: true };
+
+    // Clear all rows that can block deleting this customer.
+    const { error: scanErr } = await supabaseAdmin
       .from("scan_sessions")
       .delete()
-      .eq("customer_id", id);
-    if (sErr) throw new Error(sErr.message);
+      .eq("customer_id", customer.id);
+    if (scanErr) throw new Error(scanErr.message);
+
+    const { error: feedbackErr } = await supabaseAdmin
+      .from("feedback")
+      .delete()
+      .eq("customer_id", customer.id);
+    if (feedbackErr) throw new Error(feedbackErr.message);
+
+    const { error } = await supabaseAdmin
+      .from("customers")
+      .delete()
+      .eq("id", customer.id)
+      .eq("restaurant_id", customer.restaurant_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   }
 
   let q = supabaseAdmin.from(table).delete().eq("id", id);

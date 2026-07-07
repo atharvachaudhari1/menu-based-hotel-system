@@ -69,23 +69,45 @@ export const deleteHotel = createServerFn({ method: "POST" })
     if (a.role !== "super_admin") throw new Error("Only super admins can delete hotels");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Clear dependents that may lack ON DELETE CASCADE.
-    // scan_sessions -> customers.id (blocks customer delete, which blocks hotel delete)
+    // Clear dependents explicitly; older DB constraints may not have ON DELETE CASCADE.
     const { data: custs, error: cErr } = await supabaseAdmin
       .from("customers")
       .select("id")
       .eq("restaurant_id", data.id);
     if (cErr) throw new Error(cErr.message);
     const custIds = (custs ?? []).map((c: { id: string }) => c.id);
+
+    const { error: scopedScanErr } = await supabaseAdmin
+      .from("scan_sessions")
+      .delete()
+      .eq("restaurant_id", data.id);
+    if (scopedScanErr) throw new Error(scopedScanErr.message);
+
     if (custIds.length) {
       const { error: sErr } = await supabaseAdmin
         .from("scan_sessions")
         .delete()
         .in("customer_id", custIds);
       if (sErr) throw new Error(sErr.message);
+
+      const { error: fCustomerErr } = await supabaseAdmin
+        .from("feedback")
+        .delete()
+        .in("customer_id", custIds);
+      if (fCustomerErr) throw new Error(fCustomerErr.message);
     }
-    // Also try to clear any scan_sessions scoped by restaurant_id (best-effort)
-    await supabaseAdmin.from("scan_sessions").delete().eq("restaurant_id", data.id);
+
+    const { error: feedbackErr } = await supabaseAdmin.from("feedback").delete().eq("restaurant_id", data.id);
+    if (feedbackErr) throw new Error(feedbackErr.message);
+
+    const { error: itemErr } = await supabaseAdmin.from("menu_items").delete().eq("restaurant_id", data.id);
+    if (itemErr) throw new Error(itemErr.message);
+
+    const { error: categoryErr } = await supabaseAdmin.from("menu_categories").delete().eq("restaurant_id", data.id);
+    if (categoryErr) throw new Error(categoryErr.message);
+
+    const { error: customerErr } = await supabaseAdmin.from("customers").delete().eq("restaurant_id", data.id);
+    if (customerErr) throw new Error(customerErr.message);
 
     const { error } = await supabaseAdmin.from("restaurants").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
