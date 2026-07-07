@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star } from "lucide-react";
-import { listFeedback } from "@/lib/insights.functions";
+import { Star, Trash2 } from "lucide-react";
+import { listFeedback, deleteFeedback } from "@/lib/insights.functions";
 import { listHotels } from "@/lib/hotels.functions";
 
 export const Route = createFileRoute("/admin/feedback")({
@@ -16,14 +18,26 @@ type Fb = { id: string; restaurant_id: string; customer_id: string | null; ratin
 type Hotel = { id: string; name: string };
 
 function FeedbackPage() {
+  const qc = useQueryClient();
   const listF = useServerFn(listFeedback);
   const listH = useServerFn(listHotels);
+  const delF = useServerFn(deleteFeedback);
   const [hotelId, setHotelId] = useState("");
 
   const { data: hotels = [] } = useQuery({ queryKey: ["hotels"], queryFn: () => listH() as Promise<Hotel[]> });
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["feedback", hotelId],
     queryFn: () => listF({ data: { restaurantId: hotelId || null } }) as Promise<Fb[]>,
+  });
+
+  const deleteM = useMutation({
+    mutationFn: (id: string) => delF({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Feedback deleted");
+      qc.invalidateQueries({ queryKey: ["feedback"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const nameById = useMemo(() => Object.fromEntries(hotels.map((h) => [h.id, h.name])), [hotels]);
@@ -62,11 +76,12 @@ function FeedbackPage() {
               <th className="text-left p-3">Comment</th>
               <th className="text-left p-3">Hotel</th>
               <th className="text-left p-3">Submitted</th>
+              <th className="text-right p-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Loading…</td></tr>}
-            {!isLoading && rows.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No feedback yet.</td></tr>}
+            {isLoading && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading…</td></tr>}
+            {!isLoading && rows.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No feedback yet.</td></tr>}
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-border">
                 <td className="p-3">
@@ -79,6 +94,13 @@ function FeedbackPage() {
                 <td className="p-3">{r.comment ?? <span className="text-muted-foreground">—</span>}</td>
                 <td className="p-3">{nameById[r.restaurant_id] ?? r.restaurant_id.slice(0, 8)}</td>
                 <td className="p-3 text-muted-foreground">{new Date(r.submitted_at).toLocaleString()}</td>
+                <td className="p-3 text-right">
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    if (confirm("Delete this feedback?")) deleteM.mutate(r.id);
+                  }}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
