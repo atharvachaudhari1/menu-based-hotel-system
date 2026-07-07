@@ -94,22 +94,113 @@ function HotelDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const hotelUpdate = useMutation({
+    mutationFn: (v: { name?: string; is_active?: boolean }) =>
+      updH({ data: { id, ...v } }),
+    onSuccess: () => {
+      toast.success("Hotel updated");
+      qc.invalidateQueries({ queryKey: ["hotel", id] });
+      qc.invalidateQueries({ queryKey: ["hotels"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const hotelDelete = useMutation({
+    mutationFn: () => delH({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Hotel deleted");
+      qc.invalidateQueries({ queryKey: ["hotels"] });
+      window.location.href = "/admin/hotels";
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const [newCat, setNewCat] = useState("");
   const [addItemFor, setAddItemFor] = useState<string | null>(null);
+  const [editName, setEditName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+
+  const hasMenu = (menu?.categories.length ?? 0) > 0;
+
+  function copyRid() {
+    navigator.clipboard.writeText(id).then(() => toast.success("RID copied"));
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Link to="/admin/hotels" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="h-4 w-4 mr-1" /> Back to hotels
       </Link>
 
-      <div>
-        <h1 className="text-3xl font-display font-bold">{hotel?.name ?? "Loading…"}</h1>
-        <p className="text-muted-foreground text-sm mt-1 font-mono">{id}</p>
-      </div>
+      {/* Hotel details section */}
+      <section className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-display font-semibold">Hotel details</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (confirm(`Delete "${hotel?.name}"? This removes its menu, customers and feedback.`))
+                hotelDelete.mutate();
+            }}
+          >
+            <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete hotel
+          </Button>
+        </div>
 
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="flex gap-2 items-end flex-1 min-w-[280px] max-w-md">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1">
+            <Label>Hotel name</Label>
+            {editName ? (
+              <div className="flex gap-2">
+                <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
+                <Button size="sm" onClick={() => { hotelUpdate.mutate({ name: nameDraft }); setEditName(false); }}>Save</Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditName(false)}>Cancel</Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="text-xl font-medium">{hotel?.name ?? "…"}</div>
+                <Button size="sm" variant="ghost" onClick={() => { setNameDraft(hotel?.name ?? ""); setEditName(true); }}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="space-y-1">
+            <Label>RID (WhatsApp start code)</Label>
+            <div className="flex gap-2 items-center">
+              <code className="text-xs font-mono bg-muted rounded px-2 py-1 flex-1 truncate">{id}</code>
+              <Button size="sm" variant="ghost" onClick={copyRid}><Copy className="h-4 w-4" /></Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={hotel?.is_active ?? false}
+              onCheckedChange={(v) => hotelUpdate.mutate({ is_active: v })}
+            />
+            <Label className="!m-0">{hotel?.is_active ? "Active" : "Inactive"}</Label>
+          </div>
+        </div>
+      </section>
+
+      {/* Menu section */}
+      <section className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-lg font-display font-semibold">
+              {hasMenu ? "Edit menu" : "Create menu"}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {hasMenu
+                ? "Add / rename / delete categories and items, or bulk-add from CSV."
+                : "Start by adding a category, or upload a CSV to create everything at once."}
+            </p>
+          </div>
+          <div className="flex gap-2 items-center">
+            <CsvImporter restaurantId={id} onDone={invalidate} />
+          </div>
+        </div>
+
+        <div className="flex gap-2 items-end max-w-md">
           <div className="flex-1 space-y-1">
             <Label>New category</Label>
             <Input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="e.g. Starters" />
@@ -121,16 +212,14 @@ function HotelDetailPage() {
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
         </div>
-        <CsvImporter restaurantId={id} onDone={invalidate} />
-      </div>
 
-      {isLoading && <div className="text-muted-foreground">Loading menu…</div>}
+        {isLoading && <div className="text-muted-foreground">Loading menu…</div>}
 
-      {menu?.categories.length === 0 && !isLoading && (
-        <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
-          No categories yet — add one above.
-        </div>
-      )}
+        {!isLoading && !hasMenu && (
+          <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+            No menu yet — add a category above or upload a CSV.
+          </div>
+        )}
 
       <div className="space-y-6">
         {menu?.categories.map((cat) => {
