@@ -77,6 +77,31 @@ export const deleteHotel = createServerFn({ method: "POST" })
     if (cErr) throw new Error(cErr.message);
     const custIds = (custs ?? []).map((c: { id: string }) => c.id);
 
+    // Delete bot_sessions that reference scan_sessions for this restaurant first.
+    const { data: scansByRest, error: scansByRestErr } = await supabaseAdmin
+      .from("scan_sessions")
+      .select("id")
+      .eq("restaurant_id", data.id);
+    if (scansByRestErr) throw new Error(scansByRestErr.message);
+    const scanIdsByRest = (scansByRest ?? []).map((r: { id: string }) => r.id);
+
+    if (custIds.length) {
+      const { data: scansByCust, error: scansByCustErr } = await supabaseAdmin
+        .from("scan_sessions")
+        .select("id")
+        .in("customer_id", custIds);
+      if (scansByCustErr) throw new Error(scansByCustErr.message);
+      for (const r of scansByCust ?? []) scanIdsByRest.push((r as { id: string }).id);
+    }
+
+    if (scanIdsByRest.length) {
+      const { error: botErr } = await supabaseAdmin
+        .from("bot_sessions")
+        .delete()
+        .in("scan_session_id", scanIdsByRest);
+      if (botErr) throw new Error(botErr.message);
+    }
+
     const { error: scopedScanErr } = await supabaseAdmin
       .from("scan_sessions")
       .delete()
