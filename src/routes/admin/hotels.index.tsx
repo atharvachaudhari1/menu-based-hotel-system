@@ -174,7 +174,7 @@ function HotelRow({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(hotel.name);
 
-  const message = `menu ${hotel.id}`;
+  const message = `menu RID-${hotel.id}`;
   const waText = encodeURIComponent(message);
   const waLink = waNumber
     ? `https://wa.me/${waNumber}?text=${waText}`
