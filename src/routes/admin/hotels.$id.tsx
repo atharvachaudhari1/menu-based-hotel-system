@@ -267,6 +267,7 @@ function HotelDetailPage() {
           );
         })}
       </div>
+      </section>
 
       <ItemDialog
         open={addItemFor != null}
