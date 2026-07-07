@@ -17,6 +17,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as ApiIntrospectRouteImport } from './routes/api/_introspect'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
 const RoomsRoute = RoomsRouteImport.update({
@@ -59,6 +60,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiIntrospectRoute = ApiIntrospectRouteImport.update({
+  id: '/api/_introspect',
+  path: '/api',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api': typeof ApiIntrospectRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api': typeof ApiIntrospectRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/rooms': typeof RoomsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/_introspect': typeof ApiIntrospectRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/rooms'
     | '/admin/login'
+    | '/api'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/rooms'
     | '/admin/login'
+    | '/api'
     | '/admin'
   id:
     | '__root__'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/rooms'
     | '/admin/login'
+    | '/api/_introspect'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   GalleryRoute: typeof GalleryRoute
   RoomsRoute: typeof RoomsRoute
+  ApiIntrospectRoute: typeof ApiIntrospectRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/api/_introspect': {
+      id: '/api/_introspect'
+      path: '/api'
+      fullPath: '/api'
+      preLoaderRoute: typeof ApiIntrospectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -233,6 +253,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   GalleryRoute: GalleryRoute,
   RoomsRoute: RoomsRoute,
+  ApiIntrospectRoute: ApiIntrospectRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
