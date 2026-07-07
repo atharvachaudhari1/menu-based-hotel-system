@@ -12,8 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { ChevronLeft, Plus, Pencil, Trash2, Upload, Download } from "lucide-react";
-import { getHotel } from "@/lib/hotels.functions";
+import { ChevronLeft, Plus, Pencil, Trash2, Upload, Download, Copy } from "lucide-react";
+import { getHotel, updateHotel, deleteHotel } from "@/lib/hotels.functions";
 import {
   listMenu, createCategory, updateCategory, deleteCategory,
   createItem, updateItem, deleteItem, bulkImportMenu, type BulkRow,
