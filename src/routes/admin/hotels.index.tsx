@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Copy, Pencil, Trash2, Plus, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Copy, Pencil, Trash2, Plus, ExternalLink, QrCode, Download } from "lucide-react";
+import { QRCodeCanvas } from "qrcode.react";
 import { listHotels, createHotel, updateHotel, deleteHotel } from "@/lib/hotels.functions";
 
 export const Route = createFileRoute("/admin/hotels/")({
@@ -178,6 +179,7 @@ function HotelRow({
           <a href={waLink} target="_blank" rel="noreferrer">
             <Button size="sm" variant="ghost" title="Open WhatsApp"><ExternalLink className="h-4 w-4" /></Button>
           </a>
+          <QrDialog hotel={hotel} waLink={waLink} />
           <Link to="/admin/hotels/$id" params={{ id: hotel.id }} title="Edit hotel & menu">
             <Button size="sm" variant="ghost"><Pencil className="h-4 w-4" /></Button>
           </Link>
@@ -186,5 +188,44 @@ function HotelRow({
       </td>
 
     </tr>
+  );
+}
+
+function QrDialog({ hotel, waLink }: { hotel: Hotel; waLink: string }) {
+  const [open, setOpen] = useState(false);
+  const canvasId = `qr-${hotel.id}`;
+
+  function download() {
+    const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${hotel.name.replace(/\s+/g, "-").toLowerCase()}-qr.png`;
+    a.click();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" title="Show QR code"><QrCode className="h-4 w-4" /></Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{hotel.name} — WhatsApp QR</DialogTitle>
+          <DialogDescription>Customers scan this to open WhatsApp with the hotel pre-tagged.</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col items-center gap-4 py-2">
+          <div className="rounded-lg bg-white p-4">
+            <QRCodeCanvas id={canvasId} value={waLink} size={240} level="M" includeMargin={false} />
+          </div>
+          <div className="text-xs font-mono text-muted-foreground break-all text-center max-w-xs">{waLink}</div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Close</Button>
+          <Button onClick={download}><Download className="h-4 w-4 mr-2" />Download PNG</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
