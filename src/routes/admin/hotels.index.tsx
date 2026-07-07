@@ -209,7 +209,7 @@ function HotelRow({
       <td className="p-3 text-muted-foreground">{new Date(hotel.created_at).toLocaleDateString()}</td>
       <td className="p-3">
         <div className="flex items-center justify-end gap-1">
-          <Button size="sm" variant="ghost" onClick={() => copy(`Hi ${hotel.id}`, "WhatsApp text")} title="Copy WhatsApp start text">
+          <Button size="sm" variant="ghost" onClick={() => copy(message, "WhatsApp text")} title="Copy WhatsApp start text">
             <Copy className="h-4 w-4" />
           </Button>
           <a href={waLink} target="_blank" rel="noreferrer">
