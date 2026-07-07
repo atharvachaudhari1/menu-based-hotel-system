@@ -178,10 +178,13 @@ function HotelRow({
           <a href={waLink} target="_blank" rel="noreferrer">
             <Button size="sm" variant="ghost" title="Open WhatsApp"><ExternalLink className="h-4 w-4" /></Button>
           </a>
-          <Button size="sm" variant="ghost" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /></Button>
+          <Link to="/admin/hotels/$id" params={{ id: hotel.id }} title="Edit hotel & menu">
+            <Button size="sm" variant="ghost"><Pencil className="h-4 w-4" /></Button>
+          </Link>
           <Button size="sm" variant="ghost" onClick={onDelete}><Trash2 className="h-4 w-4 text-destructive" /></Button>
         </div>
       </td>
+
     </tr>
   );
 }
