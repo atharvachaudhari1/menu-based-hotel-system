@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Copy, Pencil, Trash2, Plus, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Copy, Pencil, Trash2, Plus, ExternalLink, QrCode, Download } from "lucide-react";
+import { QRCodeCanvas } from "qrcode.react";
 import { listHotels, createHotel, updateHotel, deleteHotel } from "@/lib/hotels.functions";
 
 export const Route = createFileRoute("/admin/hotels/")({
