@@ -120,7 +120,7 @@ function HotelsPage() {
           />
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Digits only, include country code (no +). Message format: <code>menu &lt;RID&gt;</code>
+          Digits only, include country code (no +). Message format: <code>menu RID-&lt;id&gt;</code>
         </p>
       </div>
 
