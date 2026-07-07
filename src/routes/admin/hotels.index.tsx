@@ -21,6 +21,12 @@ export const Route = createFileRoute("/admin/hotels/")({
 
 type Hotel = { id: string; name: string; is_active: boolean; created_at: string };
 
+const WA_NUMBER_KEY = "wa_business_number";
+
+function normalizeNumber(n: string) {
+  return n.replace(/[^\d]/g, "");
+}
+
 function HotelsPage() {
   const qc = useQueryClient();
   const list = useServerFn(listHotels);
@@ -32,6 +38,15 @@ function HotelsPage() {
     queryKey: ["hotels"],
     queryFn: () => list() as Promise<Hotel[]>,
   });
+
+  const [waNumber, setWaNumber] = useState<string>(() =>
+    typeof window !== "undefined" ? localStorage.getItem(WA_NUMBER_KEY) ?? "" : ""
+  );
+  function saveWa(v: string) {
+    const clean = normalizeNumber(v);
+    setWaNumber(clean);
+    localStorage.setItem(WA_NUMBER_KEY, clean);
+  }
 
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState("");
@@ -92,6 +107,22 @@ function HotelsPage() {
         </Dialog>
       </div>
 
+      <div className="rounded-xl border border-border bg-card p-4">
+        <Label htmlFor="wa-num" className="text-sm">WhatsApp business number (used for all hotel QRs)</Label>
+        <div className="flex gap-2 mt-2 max-w-md">
+          <Input
+            id="wa-num"
+            inputMode="tel"
+            placeholder="e.g. 919876543210 (country code + number)"
+            value={waNumber}
+            onChange={(e) => saveWa(e.target.value)}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Digits only, include country code (no +). Message format: <code>menu &lt;RID&gt;</code>
+        </p>
+      </div>
+
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
@@ -114,6 +145,7 @@ function HotelsPage() {
               <HotelRow
                 key={h.id}
                 hotel={h}
+                waNumber={waNumber}
                 onToggle={(v) => updateM.mutate({ id: h.id, is_active: v })}
                 onRename={(n) => updateM.mutate({ id: h.id, name: n })}
                 onDelete={() => {
@@ -130,9 +162,10 @@ function HotelsPage() {
 }
 
 function HotelRow({
-  hotel, onToggle, onRename, onDelete,
+  hotel, waNumber, onToggle, onRename, onDelete,
 }: {
   hotel: Hotel;
+  waNumber: string;
   onToggle: (v: boolean) => void;
   onRename: (n: string) => void;
   onDelete: () => void;
@@ -140,8 +173,11 @@ function HotelRow({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(hotel.name);
 
-  const waText = encodeURIComponent(`Hi ${hotel.id}`);
-  const waLink = `https://wa.me/?text=${waText}`;
+  const message = `menu ${hotel.id}`;
+  const waText = encodeURIComponent(message);
+  const waLink = waNumber
+    ? `https://wa.me/${waNumber}?text=${waText}`
+    : `https://wa.me/?text=${waText}`;
 
   function copy(text: string, label: string) {
     navigator.clipboard.writeText(text).then(() => toast.success(`${label} copied`));
@@ -173,7 +209,7 @@ function HotelRow({
       <td className="p-3 text-muted-foreground">{new Date(hotel.created_at).toLocaleDateString()}</td>
       <td className="p-3">
         <div className="flex items-center justify-end gap-1">
-          <Button size="sm" variant="ghost" onClick={() => copy(`Hi ${hotel.id}`, "WhatsApp text")} title="Copy WhatsApp start text">
+          <Button size="sm" variant="ghost" onClick={() => copy(message, "WhatsApp text")} title="Copy WhatsApp start text">
             <Copy className="h-4 w-4" />
           </Button>
           <a href={waLink} target="_blank" rel="noreferrer">
