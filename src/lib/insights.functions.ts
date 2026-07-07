@@ -98,6 +98,20 @@ async function deleteScoped(userId: string, table: "customers" | "feedback", id:
     if (!customer) return { ok: true };
 
     // Clear all rows that can block deleting this customer.
+    const { data: scans, error: scansErr } = await supabaseAdmin
+      .from("scan_sessions")
+      .select("id")
+      .eq("customer_id", customer.id);
+    if (scansErr) throw new Error(scansErr.message);
+    const scanIds = (scans ?? []).map((r: { id: string }) => r.id);
+    if (scanIds.length) {
+      const { error: botErr } = await supabaseAdmin
+        .from("bot_sessions")
+        .delete()
+        .in("scan_session_id", scanIds);
+      if (botErr) throw new Error(botErr.message);
+    }
+
     const { error: scanErr } = await supabaseAdmin
       .from("scan_sessions")
       .delete()
