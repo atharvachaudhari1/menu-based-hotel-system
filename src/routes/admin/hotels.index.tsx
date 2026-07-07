@@ -39,9 +39,10 @@ function HotelsPage() {
     queryFn: () => list() as Promise<Hotel[]>,
   });
 
-  const [waNumber, setWaNumber] = useState<string>(() =>
-    typeof window !== "undefined" ? localStorage.getItem(WA_NUMBER_KEY) ?? "" : ""
-  );
+  const [waNumber, setWaNumber] = useState<string>(() => {
+    if (typeof window === "undefined") return "15556658085";
+    return localStorage.getItem(WA_NUMBER_KEY) ?? "15556658085";
+  });
   function saveWa(v: string) {
     const clean = normalizeNumber(v);
     setWaNumber(clean);
