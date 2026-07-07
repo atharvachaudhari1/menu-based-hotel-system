@@ -119,6 +119,34 @@ function HotelsPage() {
             </tr>
           </thead>
           <tbody>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <Label htmlFor="wa-num" className="text-sm">WhatsApp business number (used for all hotel QRs)</Label>
+        <div className="flex gap-2 mt-2 max-w-md">
+          <Input
+            id="wa-num"
+            inputMode="tel"
+            placeholder="e.g. 919876543210 (country code + number)"
+            value={waNumber}
+            onChange={(e) => saveWa(e.target.value)}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Digits only, include country code (no +). Message format: <code>menu &lt;RID&gt;</code>
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+            <tr>
+              <th className="text-left p-3">Name</th>
+              <th className="text-left p-3">RID</th>
+              <th className="text-left p-3">Active</th>
+              <th className="text-left p-3">Created</th>
+              <th className="text-right p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
             {isLoading && (
               <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
             )}
