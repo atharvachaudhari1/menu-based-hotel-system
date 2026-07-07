@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Copy, Pencil, Trash2, Plus, ExternalLink } from "lucide-react";
 import { listHotels, createHotel, updateHotel, deleteHotel } from "@/lib/hotels.functions";
 
-export const Route = createFileRoute("/admin/hotels")({
+export const Route = createFileRoute("/admin/hotels/")({
   head: () => ({
     meta: [{ title: "Hotels — Admin" }, { name: "robots", content: "noindex, nofollow" }],
   }),

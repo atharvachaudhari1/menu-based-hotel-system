@@ -18,9 +18,9 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
-import { Route as AdminHotelsRouteImport } from './routes/admin/hotels'
 import { Route as AdminFeedbackRouteImport } from './routes/admin/feedback'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
+import { Route as AdminHotelsIndexRouteImport } from './routes/admin/hotels.index'
 import { Route as AdminHotelsIdRouteImport } from './routes/admin/hotels.$id'
 
 const RoomsRoute = RoomsRouteImport.update({
@@ -68,11 +68,6 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminHotelsRoute = AdminHotelsRouteImport.update({
-  id: '/hotels',
-  path: '/hotels',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
 const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
   id: '/feedback',
   path: '/feedback',
@@ -83,10 +78,15 @@ const AdminCustomersRoute = AdminCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminHotelsIndexRoute = AdminHotelsIndexRouteImport.update({
+  id: '/hotels/',
+  path: '/hotels/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminHotelsIdRoute = AdminHotelsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AdminHotelsRoute,
+  id: '/hotels/$id',
+  path: '/hotels/$id',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -99,10 +99,10 @@ export interface FileRoutesByFullPath {
   '/rooms': typeof RoomsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/feedback': typeof AdminFeedbackRoute
-  '/admin/hotels': typeof AdminHotelsRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/hotels/$id': typeof AdminHotelsIdRoute
+  '/admin/hotels/': typeof AdminHotelsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -113,10 +113,10 @@ export interface FileRoutesByTo {
   '/rooms': typeof RoomsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/feedback': typeof AdminFeedbackRoute
-  '/admin/hotels': typeof AdminHotelsRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
   '/admin/hotels/$id': typeof AdminHotelsIdRoute
+  '/admin/hotels': typeof AdminHotelsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -129,10 +129,10 @@ export interface FileRoutesById {
   '/rooms': typeof RoomsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/feedback': typeof AdminFeedbackRoute
-  '/admin/hotels': typeof AdminHotelsRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/hotels/$id': typeof AdminHotelsIdRoute
+  '/admin/hotels/': typeof AdminHotelsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -146,10 +146,10 @@ export interface FileRouteTypes {
     | '/rooms'
     | '/admin/customers'
     | '/admin/feedback'
-    | '/admin/hotels'
     | '/admin/login'
     | '/admin/'
     | '/admin/hotels/$id'
+    | '/admin/hotels/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -160,10 +160,10 @@ export interface FileRouteTypes {
     | '/rooms'
     | '/admin/customers'
     | '/admin/feedback'
-    | '/admin/hotels'
     | '/admin/login'
     | '/admin'
     | '/admin/hotels/$id'
+    | '/admin/hotels'
   id:
     | '__root__'
     | '/'
@@ -175,10 +175,10 @@ export interface FileRouteTypes {
     | '/rooms'
     | '/admin/customers'
     | '/admin/feedback'
-    | '/admin/hotels'
     | '/admin/login'
     | '/admin/'
     | '/admin/hotels/$id'
+    | '/admin/hotels/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,13 +256,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/hotels': {
-      id: '/admin/hotels'
-      path: '/hotels'
-      fullPath: '/admin/hotels'
-      preLoaderRoute: typeof AdminHotelsRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
     '/admin/feedback': {
       id: '/admin/feedback'
       path: '/feedback'
@@ -277,42 +270,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/hotels/': {
+      id: '/admin/hotels/'
+      path: '/hotels'
+      fullPath: '/admin/hotels/'
+      preLoaderRoute: typeof AdminHotelsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/hotels/$id': {
       id: '/admin/hotels/$id'
-      path: '/$id'
+      path: '/hotels/$id'
       fullPath: '/admin/hotels/$id'
       preLoaderRoute: typeof AdminHotelsIdRouteImport
-      parentRoute: typeof AdminHotelsRoute
+      parentRoute: typeof AdminRouteRoute
     }
   }
 }
 
-interface AdminHotelsRouteChildren {
-  AdminHotelsIdRoute: typeof AdminHotelsIdRoute
-}
-
-const AdminHotelsRouteChildren: AdminHotelsRouteChildren = {
-  AdminHotelsIdRoute: AdminHotelsIdRoute,
-}
-
-const AdminHotelsRouteWithChildren = AdminHotelsRoute._addFileChildren(
-  AdminHotelsRouteChildren,
-)
-
 interface AdminRouteRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
-  AdminHotelsRoute: typeof AdminHotelsRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminHotelsIdRoute: typeof AdminHotelsIdRoute
+  AdminHotelsIndexRoute: typeof AdminHotelsIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCustomersRoute: AdminCustomersRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
-  AdminHotelsRoute: AdminHotelsRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminHotelsIdRoute: AdminHotelsIdRoute,
+  AdminHotelsIndexRoute: AdminHotelsIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
