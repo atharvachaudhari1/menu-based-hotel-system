@@ -68,6 +68,25 @@ export const deleteHotel = createServerFn({ method: "POST" })
     const a = await admin(context.userId);
     if (a.role !== "super_admin") throw new Error("Only super admins can delete hotels");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Clear dependents that may lack ON DELETE CASCADE.
+    // scan_sessions -> customers.id (blocks customer delete, which blocks hotel delete)
+    const { data: custs, error: cErr } = await supabaseAdmin
+      .from("customers")
+      .select("id")
+      .eq("restaurant_id", data.id);
+    if (cErr) throw new Error(cErr.message);
+    const custIds = (custs ?? []).map((c: { id: string }) => c.id);
+    if (custIds.length) {
+      const { error: sErr } = await supabaseAdmin
+        .from("scan_sessions")
+        .delete()
+        .in("customer_id", custIds);
+      if (sErr) throw new Error(sErr.message);
+    }
+    // Also try to clear any scan_sessions scoped by restaurant_id (best-effort)
+    await supabaseAdmin.from("scan_sessions").delete().eq("restaurant_id", data.id);
+
     const { error } = await supabaseAdmin.from("restaurants").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
